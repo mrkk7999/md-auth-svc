@@ -6,11 +6,12 @@ import (
 	signin "md-auth-svc/request_response/sign_in"
 	signup "md-auth-svc/request_response/sign_up"
 	"net/http"
+	"os"
 )
 
 // UserSignUp
 func (s *service) UserSignUp(ctx context.Context, req signup.UserSignUpRequest) (*signup.SignUpResponse, error) {
-	
+
 	// Tenant verification
 	if err := s.verifyTenant(ctx, req.TenantID); err != nil {
 		return nil, fmt.Errorf("tenant verification failed: %v", err)
@@ -68,7 +69,8 @@ func (s *service) SignIn(ctx context.Context, req *signin.SignInRequest) (*signi
 }
 
 func (s *service) verifyTenant(ctx context.Context, tenantID string) error {
-	apiURL := fmt.Sprintf("http://localhost:9002/api/v1/tenants/%v", tenantID)
+	url := os.Getenv("GET_TENANT_URL")
+	apiURL := fmt.Sprintf(url+"%v", tenantID)
 
 	// Create request with Authorization header
 	req, err := http.NewRequestWithContext(ctx, "GET", apiURL, nil)
