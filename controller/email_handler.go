@@ -11,15 +11,21 @@ import (
 func (c *Controller) UserEmailVerificationHandler(w http.ResponseWriter, r *http.Request) {
 	var req emailverification.VerifyEmailRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
-		return
-	}
-	ctx := context.Background()
-	response, err := c.service.EmailVerification(ctx, req)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		c.log.Error("Invalid request payload: ", err)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid request payload"})
 		return
 	}
 
+	ctx := context.Background()
+	response, err := c.service.EmailVerification(ctx, req)
+	if err != nil {
+		c.log.Error("Email verification failed: ", err)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		return
+	}
+
+	c.log.Info(req.Username, "Email verified successfully!")
 	json.NewEncoder(w).Encode(response)
 }

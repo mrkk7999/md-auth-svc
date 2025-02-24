@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"md-auth-svc/controller"
 	"md-auth-svc/implementation"
 	"md-auth-svc/repository"
@@ -14,11 +13,18 @@ import (
 	"syscall"
 
 	"github.com/joho/godotenv"
+	"github.com/sirupsen/logrus"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 func main() {
+
+	// Logger
+	log := logrus.New()
+	log.SetFormatter(&logrus.JSONFormatter{
+		TimestampFormat: "2006-01-02 15:04:05",
+	})
 
 	err := godotenv.Load("../.env")
 	if err != nil {
@@ -40,11 +46,6 @@ func main() {
 		cogClientID   = os.Getenv("COG_CLIENT_ID")
 		cogRegion     = os.Getenv("COG_REGION")
 		cogSecret     = os.Getenv("COG_SECRET")
-		// export AWS_ACCESS_KEY_ID=AKIAXTKSIGC46ZDFJYPP
-		// export AWS_SECRET_ACCESS_KEY=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
-		// export AWS_REGION=eu-north-1
-		// awsKeyID        = os.Getenv("AWS_ACCESS_KEY_ID")
-		// awsSecretAccess = os.Getenv("AWS_SECRET_ACCESS_KEY")
 	)
 
 	// PostgreSQL DSN
@@ -61,16 +62,17 @@ func main() {
 
 	cognitoClient, err := cognito.NewCognitoClient(cogUserPoolID, cogClientID, cogSecret, cogRegion)
 	if err != nil {
-		log.Fatal("Failed to initialise cognito client", err)
+		log.Warn("Failed to initialise cognito client", err)
 	}
+	log.Info("Cognito client initialized")
 
 	cognito := cognito.NewAuthService(cognitoClient)
 
 	svc := implementation.New(repo, cognito)
 
-	controller := controller.New(svc)
+	controller := controller.New(svc, log)
 
-	handler := httpTransport.SetUpRouter(controller)
+	handler := httpTransport.SetUpRouter(controller, log)
 
 	errs := make(chan error)
 
@@ -80,7 +82,7 @@ func main() {
 		errs <- fmt.Errorf("%s", <-c)
 	}()
 
-	fmt.Println("Server is running " + httpAddr)
+	log.Info("Server is running on ", httpAddr)
 
 	go func() {
 		server := &http.Server{
@@ -90,5 +92,5 @@ func main() {
 		errs <- server.ListenAndServe()
 	}()
 
-	log.Println("exit", <-errs)
+	log.Error("exit", <-errs)
 }

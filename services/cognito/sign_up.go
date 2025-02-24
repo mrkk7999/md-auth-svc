@@ -19,7 +19,6 @@ func (s *AuthService) SignUp(ctx context.Context, req *signup.SignUpRequest) (*s
 
 	secretHash := s.cognito.GenerateSecretHash(req.Username)
 
-	// Step 1:
 	// Sign up the user
 	input := &cognitoidentityprovider.SignUpInput{
 		ClientId:   &s.cognito.ClientID,
@@ -38,18 +37,11 @@ func (s *AuthService) SignUp(ctx context.Context, req *signup.SignUpRequest) (*s
 		return nil, fmt.Errorf("sign-up failed: %v", err)
 	}
 
-	// Step 2:
 	// Assign user to Cognito User Pool Group (only if group is provided)
 	log.Println("user pool group", req.UserPoolGroup)
 	if req.UserPoolGroup != "" {
-		groupInput := &cognitoidentityprovider.AdminAddUserToGroupInput{
-			UserPoolId: &s.cognito.UserPoolID,
-			Username:   &req.Username,
-			GroupName:  &req.UserPoolGroup,
-		}
 
-		log.Println(groupInput)
-		_, err := s.cognito.Client.AdminAddUserToGroup(ctx, groupInput)
+		err := s.AddUserToGroup(ctx, req.Username, req.UserPoolGroup)
 		if err != nil {
 			return nil, fmt.Errorf("user signed up but failed to assign to group: %v", err)
 		}

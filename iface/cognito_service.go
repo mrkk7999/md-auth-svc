@@ -8,6 +8,7 @@ import (
 	resetpassword "md-auth-svc/request_response/reset_password"
 	signin "md-auth-svc/request_response/sign_in"
 	signup "md-auth-svc/request_response/sign_up"
+	usergroup "md-auth-svc/request_response/user_group"
 	validatetoken "md-auth-svc/request_response/validate_token"
 )
 
@@ -24,7 +25,11 @@ type CognitoServiceInterface interface {
 
 	SignUp(ctx context.Context, req *signup.SignUpRequest) (*signup.SignUpResponse, error)
 
+	SignOut(ctx context.Context, accessToken string) error
+
 	ValidateToken(ctx context.Context, req *validatetoken.ValidateTokenRequest) (*validatetoken.ValidateTokenResponse, error)
 
 	VerifyEmail(ctx context.Context, req *emailverification.VerifyEmailRequest) (*emailverification.VerifyEmailResponse, error)
+
+	MoveUserToGroup(ctx context.Context, req usergroup.UserToGroupRequest) error
 }

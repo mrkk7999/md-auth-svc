@@ -6,7 +6,6 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -39,8 +38,6 @@ func NewCognitoClient(userPoolID, clientID, clientSecret, region string) (*Cogni
 	}
 
 	client := cognitoidentityprovider.NewFromConfig(cfg)
-
-	log.Println("Cognito client initialized with UserPoolID:", userPoolID, "Region:", region)
 
 	return &CognitoClient{
 		Client:       client,

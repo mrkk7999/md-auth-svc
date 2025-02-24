@@ -31,7 +31,7 @@ func (s *service) UserSignUp(ctx context.Context, req signup.UserSignUpRequest) 
 	if err != nil {
 		return nil, err
 	}
-	res, err := s.repository.UserSignUp(ctx, &req, cogRes.UserSub)
+	res, err := s.repository.CreateTenantUser(ctx, &req, cogRes.UserSub)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +53,7 @@ func (s *service) SysAdminSignUp(ctx context.Context, req signup.SysAdminSignUpR
 	if err != nil {
 		return nil, err
 	}
-	res, err := s.repository.SysAdminSignUp(ctx, &req, cogRes.UserSub)
+	res, err := s.repository.CreateSystemAdmin(ctx, &req, cogRes.UserSub)
 	if err != nil {
 		return nil, err
 	}
@@ -66,6 +66,10 @@ func (s *service) SignIn(ctx context.Context, req *signin.SignInRequest) (*signi
 		return nil, err
 	}
 	return res, nil
+}
+
+func (s *service) SignOut(ctx context.Context, accessToken string) error {
+	return s.cognito.SignOut(ctx, accessToken)
 }
 
 func (s *service) verifyTenant(ctx context.Context, tenantID string) error {
